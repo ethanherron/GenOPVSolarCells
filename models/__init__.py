@@ -10,4 +10,5 @@ __all__ = ['ContextUnet_2lvls', 'Unet_2lvls',
            'Discriminator_WGAN_TO', 'Discriminator_WGAN_Micro',
            'Encoder', 'Decoder', 'AE', 'Generator_Normal',
            'GoodGenerator', 'GoodDiscriminator',
+           'JF_Net'
            'DDPM']
