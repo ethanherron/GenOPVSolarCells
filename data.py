@@ -1,7 +1,8 @@
-import os, torch
+import os
 import numpy as np
+import jax.numpy as jnp
 from torch.utils import data
-from torchvision import transforms
+from einops import rearrange
 
 
 class TopoDataset2D(data.Dataset):
@@ -22,13 +23,14 @@ class TopoDataset2D(data.Dataset):
         return self.final_D.shape[0]
     
     def log_normalization(self, x):
-        x = torch.clamp(x, min = 1e-22, max = None)
-        x = (22 + torch.log10(torch.clamp(x/torch.max(x), 1e-22, 1.0)))/22.0
+        x = np.clip(x, a_min = 1e-22, a_max = None)
+        x = (22 + np.log10(np.clip(x/np.max(x), 1e-22, 1.0)))/22.0
         return x
 
     def __getitem__(self, index):
         'Generates one sample of data'
-        return torch.FloatTensor(self.final_D[index])
+        sample = rearrange(self.final_D[index], 'c h w -> h w c')
+        return jnp.float32(sample)
 
 
 
@@ -43,4 +45,5 @@ class MicrostructureDataset(data.Dataset):
         return self.microstructure.shape[0]
 
     def __getitem__(self, index):
-        return torch.FloatTensor(self.microstructure[index])
+        sample = rearrange(self.microstructure[index], 'c h w -> h w c')
+        return jnp.float32(sample)
