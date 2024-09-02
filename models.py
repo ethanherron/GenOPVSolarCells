@@ -1,10 +1,12 @@
-# mostly copy and pasted from https://github.com/brianfitzgerald/jax-mmdit/blob/main
-
+# a mish-mash of
+# https://github.com/brianfitzgerald/jax-mmdit/blob/main
+# https://github.com/kvfrans/jax-diffusion-transformer/blob/main
 import jax
 from jax import Array
 import jax.numpy as jnp
 import flax.linen as nn
-from typing import Optional
+from typing import Any, Callable, Optional, Tuple, Type, Sequence, Union
+from einops import repeat, rearrange
 
 
 class TimestepEmbedding(nn.Module):
@@ -36,27 +38,36 @@ class TimestepEmbedding(nn.Module):
         return embedding
     
 
-class Attention(nn.Module):
+class FeedForward(nn.Module):
     dim: int
-    n_heads: int
+    hidden_dim: int
+    mlp_ratio: int
     dtype: jnp.dtype
     
-    def setup(self):
-        self.head_dim = self.dim // self.n_heads
-        
-        self.wq = nn.Dense(
-            self.n_heads * self.head_dim, use_bias=False, dtype=self.dtype
-        )
-        self.wk = nn.Dense(
-            self.n_heads * self.head_dim, use_bias=False, dtype=self.dtype
-        )
-        self.wv = nn.Dense(
-            self.n_heads * self.head_dim, use_bias=False, dtype=self.dtype
-        )
-        self.wo = nn.Dense(self.dim, use_bias=False)
-        self.q_norm = nn.LayerNorm(dtype=self.dtype)
-        self.k_norm = nn.LayerNorm(dtype=self.dtype)
-        
-    @staticmethod
-    def reshape_for_broadcast()
+    @nn.compact
+    def __call__(self, x: Array):
+        x1 = nn.Dense(
+            features=self.dim * self.mlp_ratio,
+            use_bias=False,
+            dtype=self.dtype,
+            kernel_init=jax.nn.initializers.xavier_uniform()
+        )(x)
+        x1 = nn.gelu(x1)
+        x2 = nn.Dense(
+            features=self.dim * self.mlp_ratio,
+            use_bias=False,
+            dtype=self.dtype,
+            kernel_init=jax.nn.initializers.xavier_uniform()
+        )(x)
+        x3 = x1 * x2
+        output = nn.Dense(
+            features=self.dim,
+            use_bias=False,
+            dtype=self.dtype,
+            kernel_init=jax.nn.initializers.xavier_uniform()
+            )
+        return output
+    
+
+    
         
