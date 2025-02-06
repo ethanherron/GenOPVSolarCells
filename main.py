@@ -2,12 +2,12 @@ import argparse
 import os
 import torch
 from networks import (
-    DDPM, 
     Unet,
     Generator,
     Discriminator_Micro,
     Discriminator_WGAN_Micro
 )
+from diffusion import DDPM
 from trainers import (
     train_diffusion,
     train_gan
@@ -26,7 +26,7 @@ def main(args):
     # ------------------------
     # 2 INIT DATA
     # ------------------------
-    data_path = '/data/EthanHerron/data/material_microstructures/microstructures.npz'
+    data_path = '/home/idealaboptimus/data/edherron/microstructures/microstructures.npz'
     dataset = MicrostructureDataset(data_path)
     dataloader = torch.utils.data.DataLoader(
         dataset, 

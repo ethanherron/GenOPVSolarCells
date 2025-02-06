@@ -36,7 +36,7 @@ def adjust_lr(optimizer, initial_lr, epoch, total_epochs):
     for group in optimizer.param_groups:
         group['lr'] = lr
 
-def train_unconditional_diffusion(n_epochs, dataloader, inf_samples, model, optimizer, initial_lr, device, save_dir, save_weights_freq=2):
+def train_diffusion(n_epochs, dataloader, inf_samples, model, optimizer, initial_lr, device, save_dir, save_weights_freq=2):
     """
     Trains a diffusion model with AMP.
     
@@ -66,7 +66,7 @@ def train_unconditional_diffusion(n_epochs, dataloader, inf_samples, model, opti
             x = x.to(device, non_blocking=True)
             
             # Forward pass under AMP autocast
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast('cuda'):
                 loss = model(x)
             
             scaler.scale(loss).backward()
@@ -82,7 +82,7 @@ def train_unconditional_diffusion(n_epochs, dataloader, inf_samples, model, opti
         with torch.no_grad():
             x_real = inf_samples.to(device, non_blocking=True)
             # Optionally, you can use autocast here as well.
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast('cuda'):
                 x_gen, _ = model.sample(x_real.size(0), tuple(x_real[0].shape), device)
             x_all = torch.cat([x_gen.cpu(), x_real.cpu()])
             grid = make_grid(x_all * -1 + 1, nrow=10)
@@ -95,7 +95,7 @@ def train_unconditional_diffusion(n_epochs, dataloader, inf_samples, model, opti
             torch.save(model.state_dict(), model_path)
             print(f"Saved model weights: {model_path}")
 
-def train_unconditional_gan(n_epochs, dataloader, inf_samples, generator, discriminator, optimizers, initial_lr, device, save_dir, gan_type="standard", save_weights_freq=10):
+def train_gan(n_epochs, dataloader, inf_samples, generator, discriminator, optimizers, initial_lr, device, save_dir, gan_type="standard", save_weights_freq=10):
     """
     Trains a GAN with AMP using either the standard (BCE loss) formulation or 
     the WGAN formulation with gradient penalty.
@@ -140,7 +140,7 @@ def train_unconditional_gan(n_epochs, dataloader, inf_samples, generator, discri
                 generator.zero_grad()
                 
                 noise = torch.randn(x.size(0), 128, device=device)
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast('cuda'):
                     gen_out = generator(noise)
                     fake_pred = discriminator(gen_out)
                     gen_loss = F.binary_cross_entropy_with_logits(fake_pred, label_real)
@@ -156,7 +156,7 @@ def train_unconditional_gan(n_epochs, dataloader, inf_samples, generator, discri
                         p.requires_grad = True
                     discriminator.zero_grad()
                     
-                    with torch.cuda.amp.autocast():
+                    with torch.amp.autocast('cuda'):
                         real_pred = discriminator(x)
                         fake_pred = discriminator(gen_out.detach())
                         disc_loss = (F.binary_cross_entropy_with_logits(real_pred, label_real) +
@@ -175,7 +175,7 @@ def train_unconditional_gan(n_epochs, dataloader, inf_samples, generator, discri
                     generator.zero_grad()
                     
                     noise = torch.randn(x.size(0), 128, device=device)
-                    with torch.cuda.amp.autocast():
+                    with torch.amp.autocast('cuda'):
                         gen_out = generator(noise)
                         fake_pred = discriminator(gen_out)
                         gen_loss = -fake_pred.mean()
@@ -191,7 +191,7 @@ def train_unconditional_gan(n_epochs, dataloader, inf_samples, generator, discri
                 discriminator.zero_grad()
                 
                 # Compute discriminator predictions under autocast.
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast('cuda'):
                     real_pred = discriminator(x)
                     # If not updated above, compute a fresh gen_out.
                     if idx % 5 != 0:
@@ -200,7 +200,7 @@ def train_unconditional_gan(n_epochs, dataloader, inf_samples, generator, discri
                     fake_pred = discriminator(gen_out.detach())
                     disc_loss_partial = fake_pred.mean() - real_pred.mean()
                 # Compute gradient penalty in full precision for stability.
-                with torch.cuda.amp.autocast(enabled=False):
+                with torch.amp.autocast(device_type='cuda', enabled=False):
                     gp = calc_gradient_penalty(discriminator, x, gen_out, device)
                 disc_loss = disc_loss_partial + gp
                 scaler.scale(disc_loss).backward()
@@ -212,7 +212,7 @@ def train_unconditional_gan(n_epochs, dataloader, inf_samples, generator, discri
         # Evaluation: generate sample grid image.
         with torch.no_grad():
             noise = torch.randn(inf_samples.size(0), 128, device=device)
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast('cuda'):
                 generated = generator(noise)
             x_real = inf_samples.to(device, non_blocking=True)
             x_all = torch.cat([generated.cpu(), x_real.cpu()])

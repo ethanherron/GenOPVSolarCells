@@ -16,8 +16,7 @@ from torch import autograd
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-import models
-from models import JF_Net
+from networks import JF_Net
 from torchvision import transforms
 from tqdm import tqdm
 

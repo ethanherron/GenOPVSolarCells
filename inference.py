@@ -2,6 +2,11 @@ import os
 import argparse
 import numpy as np
 import torch
+from networks import (
+    DDPM,
+    Unet,
+    Generator
+)
 
 import models
 from models import *
@@ -32,7 +37,7 @@ def infer_gan(args, device):
 def infer_diffusion(args, device):
     print("Running Diffusion inference...")
     # Initialize the diffusion model.
-    nn_model = ContextUnet_3lvls(in_channels=1, n_feat=128)
+    nn_model = Unet(in_channels=1, n_feat=128)
     model = models.DDPM(nn_model=nn_model, betas=(1e-4, 0.02), n_T=1000, device=device, drop_prob=0.1)
     model.load_state_dict(torch.load(args.model_weights, map_location=device))
     model.eval()
