@@ -26,7 +26,7 @@ def main(args):
     # ------------------------
     # 2 INIT DATA
     # ------------------------
-    data_path = '/home/idealaboptimus/data/edherron/microstructures/microstructures.npz'
+    data_path = 'data_path'
     dataset = MicrostructureDataset(data_path)
     dataloader = torch.utils.data.DataLoader(
         dataset, 
