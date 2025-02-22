@@ -6,6 +6,8 @@
 
 This work presents a diffusion model for generating two-phase microstructures for organic solar cells. The proposed method demonstrates improved performance over previous approaches in producing realistic microstructures while effectively capturing the diversity of the target distribution.
 
+[Read the full paper here](https://openreview.net/pdf?id=f9Lk1G9q-G-)
+
 ## Citation
 
 ```bibtex
